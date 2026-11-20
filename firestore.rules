@@ -1,0 +1,80 @@
+rules_version = '2';
+
+// Aturan keamanan Firestore untuk SIMRS IGD.
+// Deploy dengan: firebase deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    function profile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function hasProfile() {
+      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    function role() {
+      return profile().role;
+    }
+    function isRole(r) {
+      return hasProfile() && role() == r;
+    }
+    function validRole(r) {
+      return r in ['pendaftaran', 'perawat', 'dokter', 'kepala'];
+    }
+
+    // Profil petugas. Peran dipilih saat daftar (mode demo/tugas kuliah).
+    // Setelah dibuat, peran hanya bisa diubah oleh Kepala IGD.
+    match /users/{uid} {
+      allow read: if hasProfile() || (signedIn() && request.auth.uid == uid);
+      allow create: if signedIn() && request.auth.uid == uid
+                    && validRole(request.resource.data.role)
+                    && request.resource.data.name is string;
+      allow update: if (signedIn() && request.auth.uid == uid
+                        && request.resource.data.role == resource.data.role)
+                    || (isRole('kepala') && validRole(request.resource.data.role));
+      allow delete: if isRole('kepala');
+    }
+
+    // Data master pasien (rekam medis).
+    match /patients/{patientId} {
+      allow read: if hasProfile();
+      allow create, update: if hasProfile();
+      allow delete: if isRole('kepala');
+    }
+
+    // Kunjungan IGD. Semua petugas boleh membaca dan memperbarui.
+    // Hapus hanya untuk pendaftaran yang salah input (belum ditriase).
+    match /visits/{visitId} {
+      allow read: if hasProfile();
+      allow create, update: if hasProfile();
+      allow delete: if isRole('kepala') || (isRole('pendaftaran') && resource.data.status == 'terdaftar');
+    }
+
+    // Notifikasi pra-kedatangan dari ambulans.
+    match /prearrivals/{id} {
+      allow read, create, update: if hasProfile();
+      allow delete: if isRole('pendaftaran') || isRole('perawat') || isRole('kepala');
+    }
+
+    // Log resource FHIR. Hanya boleh ditambah, tidak boleh diubah (jejak audit).
+    match /fhirLogs/{id} {
+      allow read, create: if hasProfile();
+      allow update: if false;
+      allow delete: if isRole('kepala');
+    }
+
+    // Status IGD bersama: mode korban massal, kapasitas, dan penomoran.
+    match /meta/{docId} {
+      allow read: if hasProfile();
+      allow create: if hasProfile();
+      // Hanya Kepala IGD yang boleh mengaktifkan atau menonaktifkan mode korban massal.
+      allow update: if hasProfile() && (
+        isRole('kepala') ||
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['activeIncident', 'pastIncidents'])
+      );
+      allow delete: if isRole('kepala');
+    }
+  }
+}
