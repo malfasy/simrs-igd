@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
+import { Plus } from 'lucide-react'
 import { DEMO_PEOPLE, ROLE_LABEL } from '@/lib/constants'
 import type { Role } from '@/lib/types'
 import { useAuth } from './providers'
@@ -24,7 +25,12 @@ export function LoginScreen() {
         <div className="login">
           <div>
             <div className="brandbig">
-              SIMRS <b>IGD</b>
+              <span className="logo">
+                <Plus size={26} strokeWidth={3} />
+              </span>
+              <span>
+                SIMRS <b>IGD</b>
+              </span>
             </div>
             <p className="muted">Mode demo lokal. Pilih peran untuk masuk. Data contoh disimpan di browser ini.</p>
           </div>
@@ -83,7 +89,12 @@ export function LoginScreen() {
       <div className="login" style={{ maxWidth: 440 }}>
         <div>
           <div className="brandbig">
-            SIMRS <b>IGD</b>
+            <span className="logo">
+              <Plus size={26} strokeWidth={3} />
+            </span>
+            <span>
+              SIMRS <b>IGD</b>
+            </span>
           </div>
           <p className="muted">Masuk dengan akun petugas.</p>
         </div>
@@ -173,7 +184,12 @@ function CompleteProfile() {
       <div className="login" style={{ maxWidth: 440 }}>
         <div>
           <div className="brandbig">
-            SIMRS <b>IGD</b>
+            <span className="logo">
+              <Plus size={26} strokeWidth={3} />
+            </span>
+            <span>
+              SIMRS <b>IGD</b>
+            </span>
           </div>
           <p className="muted">Lengkapi profil petugas untuk {p.email ?? 'akun ini'}. Langkah ini hanya sekali.</p>
         </div>

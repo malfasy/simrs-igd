@@ -246,3 +246,58 @@ export function ConfirmButton({ onConfirm, children, confirmText, className = 'b
     </button>
   )
 }
+
+/* ---------- Kartu angka ---------- */
+export function StatCard({ icon, n, l, tone = '' }: { icon?: ReactNode; n: ReactNode; l: string; tone?: string }) {
+  return (
+    <div className={`stat ${tone}`}>
+      {icon && <div className="ic">{icon}</div>}
+      <div className="n">{n}</div>
+      <div className="l">{l}</div>
+    </div>
+  )
+}
+
+/* ---------- Donut ---------- */
+export function Donut({ segments, centerLabel, size = 168 }: { segments: { label: string; value: number; color: string }[]; centerLabel: string; size?: number }) {
+  const total = segments.reduce((s, x) => s + x.value, 0)
+  const r = size / 2 - 16
+  const c = 2 * Math.PI * r
+  const gap = total > 0 && segments.filter((x) => x.value > 0).length > 1 ? 6 : 0
+  let offset = 0
+  return (
+    <div className="donut">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={segments.map((x) => `${x.label} ${x.value}`).join(', ')}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--surface-2)" strokeWidth={24} />
+        {total > 0 &&
+          segments.map((x) => {
+            const len = (x.value / total) * c
+            const dash = Math.max(0, len - gap)
+            const el = (
+              <circle
+                key={x.label}
+                cx={size / 2}
+                cy={size / 2}
+                r={r}
+                fill="none"
+                stroke={x.color}
+                strokeWidth={24}
+                strokeDasharray={`${dash} ${c - dash}`}
+                strokeDashoffset={-offset}
+                transform={`rotate(-90 ${size / 2} ${size / 2})`}
+              />
+            )
+            offset += len
+            return el
+          })}
+        <circle cx={size / 2} cy={size / 2} r={r - 20} fill="var(--surface-2)" />
+        <text x="50%" y="48%" textAnchor="middle" className="center-n">
+          {total}
+        </text>
+        <text x="50%" y="60%" textAnchor="middle" className="center-l">
+          {centerLabel}
+        </text>
+      </svg>
+    </div>
+  )
+}

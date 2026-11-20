@@ -6,7 +6,8 @@ import { AREAS, BEDS, BOARDING_LIMIT, complaintLabel, DISPO, LEVELS, PATHWAYS, S
 import { ageSex, areaOf, displayName, displayRm, freeBeds, hm, isActive, isAlert, isBoarding, isChild, lastVital, newsRisk, waitState } from '@/lib/clinical'
 import type { PathwayKey, Visit } from '@/lib/types'
 import { useAuth, useData, useStore } from '../providers'
-import { Chip, Countdown, Empty, Timer, TriageChip, useNow, useRunner } from '../ui'
+import { AlertTriangle, BedDouble, HeartPulse, Hourglass, Activity, UserCheck, Skull, LogOut } from 'lucide-react'
+import { Chip, Countdown, Empty, StatCard, Timer, TriageChip, useNow, useRunner } from '../ui'
 
 export function Board() {
   const data = useData()
@@ -82,15 +83,15 @@ export function Board() {
         </div>
       </div>
 
-      <section className="stats">
-        <Stat cls="red" n={cnt('red')} l="Merah (L1-L2)" />
-        <Stat cls="yellow" n={cnt('yellow')} l="Kuning (L3)" />
-        <Stat cls="green" n={cnt('green')} l="Hijau (L4-L5)" />
-        {cnt('black') > 0 && <Stat cls="black" n={cnt('black')} l="Hitam" />}
-        <Stat n={untriaged} l="Belum triase" />
-        <Stat cls={over ? 'crit' : ''} n={over} l="Lewat target waktu dokter" />
-        <Stat cls={boarding ? 'crit' : ''} n={boarding} l={`Menunggu keluar lebih dari ${BOARDING_LIMIT / 60} jam`} />
-        <Stat n={`${BEDS.length - free.length}/${BEDS.length}`} l="Bed terisi" />
+      <section className="stats compact">
+        <StatCard icon={<HeartPulse size={20} />} tone="red" n={cnt('red')} l="Merah (L1-L2)" />
+        <StatCard icon={<Activity size={20} />} tone="yellow" n={cnt('yellow')} l="Kuning (L3)" />
+        <StatCard icon={<UserCheck size={20} />} tone="green" n={cnt('green')} l="Hijau (L4-L5)" />
+        {cnt('black') > 0 && <StatCard icon={<Skull size={20} />} tone="black" n={cnt('black')} l="Hitam" />}
+        <StatCard icon={<Hourglass size={20} />} n={untriaged} l="Belum triase" />
+        <StatCard icon={<AlertTriangle size={20} />} tone={over ? 'crit' : ''} n={over} l="Lewat target waktu dokter" />
+        <StatCard icon={<LogOut size={20} />} tone={boarding ? 'crit' : ''} n={boarding} l={`Menunggu keluar lebih dari ${BOARDING_LIMIT / 60} jam`} />
+        <StatCard icon={<BedDouble size={20} />} n={`${BEDS.length - free.length}/${BEDS.length}`} l="Bed terisi" />
       </section>
 
       <div className="bedstrip" aria-label="Status bed">
@@ -138,14 +139,6 @@ export function Board() {
   )
 }
 
-function Stat({ n, l, cls = '' }: { n: number | string; l: string; cls?: string }) {
-  return (
-    <div className={`stat ${cls}`}>
-      <div className="n">{n}</div>
-      <div className="l">{l}</div>
-    </div>
-  )
-}
 
 export function PatientCard({ v, now }: { v: Visit; now: number }) {
   const l = lastVital(v)

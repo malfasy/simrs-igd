@@ -295,8 +295,9 @@ export const DEMO_PEOPLE: Record<Role, string> = {
   kepala: 'dr. Laras, Sp.EM',
 }
 
-export type ViewKey = 'board' | 'prearrival' | 'register' | 'patients' | 'history' | 'mci' | 'quality' | 'staff' | 'fhir'
+export type ViewKey = 'dashboard' | 'board' | 'prearrival' | 'register' | 'patients' | 'history' | 'mci' | 'quality' | 'staff' | 'fhir'
 export const NAV: { key: ViewKey; label: string; href: string; group: string }[] = [
+  { key: 'dashboard', label: 'Dashboard', href: '/dashboard', group: 'Pelayanan' },
   { key: 'board', label: 'Papan IGD', href: '/', group: 'Pelayanan' },
   { key: 'prearrival', label: 'Pra-Kedatangan', href: '/pra-kedatangan', group: 'Pelayanan' },
   { key: 'register', label: 'Pendaftaran Cepat', href: '/pendaftaran', group: 'Pelayanan' },
@@ -308,10 +309,10 @@ export const NAV: { key: ViewKey; label: string; href: string; group: string }[]
   { key: 'fhir', label: 'Log Satu Sehat', href: '/satusehat', group: 'Manajemen' },
 ]
 export const ACCESS: Record<Role, ViewKey[]> = {
-  pendaftaran: ['board', 'prearrival', 'register', 'patients', 'history'],
-  perawat: ['board', 'prearrival', 'register', 'patients', 'history', 'fhir'],
-  dokter: ['board', 'prearrival', 'patients', 'history', 'quality', 'fhir'],
-  kepala: ['board', 'prearrival', 'register', 'mci', 'patients', 'history', 'quality', 'staff', 'fhir'],
+  pendaftaran: ['dashboard', 'board', 'prearrival', 'register', 'patients', 'history'],
+  perawat: ['dashboard', 'board', 'prearrival', 'register', 'patients', 'history', 'fhir'],
+  dokter: ['dashboard', 'board', 'prearrival', 'patients', 'history', 'quality', 'fhir'],
+  kepala: ['dashboard', 'board', 'prearrival', 'register', 'mci', 'patients', 'history', 'quality', 'staff', 'fhir'],
 }
 
 export type TabKey = 'ringkasan' | 'triase' | 'asesmen' | 'penunjang' | 'observasi' | 'trauma' | 'disposisi' | 'tagihan'
