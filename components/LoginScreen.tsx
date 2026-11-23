@@ -7,7 +7,7 @@ import type { Role } from '@/lib/types'
 import { useAuth } from './providers'
 
 const ROLE_DESC: Record<Role, string> = {
-  pendaftaran: 'Pendaftaran cepat, papan IGD, pra-kedatangan',
+  pendaftaran: 'Pendaftaran Pasien, papan IGD, pra-kedatangan',
   perawat: 'Triase, observasi tanda vital, primary survey trauma',
   dokter: 'Asesmen, order penunjang, resep, disposisi',
   kepala: 'Semua modul, mode korban massal, dashboard mutu',

@@ -387,7 +387,8 @@ export async function deletePatientRecord(ctx: Ctx, p: Patient) {
 /** Hapus pendaftaran yang salah input, hanya sebelum ada data klinis. */
 export async function deleteRegistration(ctx: Ctx, v: Visit) {
   if (ctx.user.role !== 'kepala' && ctx.user.role !== 'pendaftaran') throw new Error('Hanya petugas pendaftaran atau Kepala IGD yang bisa menghapus pendaftaran.')
-  if (v.status !== 'terdaftar' || v.triage.length || v.vitals.length) throw new Error('Pendaftaran yang sudah ditriase tidak bisa dihapus.')
+  // Petugas pendaftaran hanya boleh menghapus sebelum pasien ditriase. Kepala IGD boleh menghapus kunjungan apa pun (misalnya data uji coba).
+  if (ctx.user.role !== 'kepala' && (v.status !== 'terdaftar' || v.triage.length || v.vitals.length)) throw new Error('Pendaftaran yang sudah ditriase hanya bisa dihapus Kepala IGD.')
   await ctx.store.deleteVisit(v.id)
   return true
 }
@@ -398,6 +399,59 @@ export async function moveBed(ctx: Ctx, v0: Visit, bed: string | null) {
   addEvent(v, `Pindah ${v.bed ? `dari bed ${v.bed}` : 'dari ruang tunggu'} ke ${bed ? `bed ${bed}` : 'ruang tunggu'}`, me(ctx))
   v.bed = bed
   return commit(ctx, v)
+}
+
+/* ---------- Ubah data pendaftaran (salah ketik, keluhan berubah, dll.) ---------- */
+export interface RegistrationEdit {
+  name: string
+  sex: Sex
+  age: number | null
+  arrivalMode: ArrivalMode
+  insurance: InsuranceType
+  complaint: ComplaintKey
+  complaintNote: string
+}
+
+export async function updateRegistration(ctx: Ctx, v0: Visit, input: RegistrationEdit, patients: Patient[]) {
+  if (v0.status === 'keluar') throw new Error('Kunjungan yang sudah selesai tidak bisa diubah.')
+  if (!v0.anonymous && !input.name.trim()) throw new Error('Nama pasien wajib diisi.')
+  if (input.age !== null && (input.age < 0 || input.age > 130)) throw new Error('Umur tidak masuk akal.')
+  const v = clone(v0)
+  const changed: string[] = []
+  const name = input.name.trim()
+  if (!v.anonymous && name !== v.patient.name) changed.push('nama')
+  if (input.sex !== v.patient.sex) changed.push('jenis kelamin')
+  if (input.age !== v.patient.age) changed.push('umur')
+  if (input.arrivalMode !== v.arrivalMode) changed.push('cara datang')
+  if (input.insurance !== v.insurance) changed.push('penjamin')
+  if (input.complaint !== v.complaint || input.complaintNote.trim() !== v.complaintNote) changed.push('keluhan')
+  if (!changed.length) return v0
+
+  v.patient = { ...v.patient, name: v.anonymous ? v.patient.name : name, sex: input.sex, age: input.age }
+  v.arrivalMode = input.arrivalMode
+  v.insurance = input.insurance
+  v.complaint = input.complaint
+  v.complaintNote = input.complaintNote.trim()
+  if (input.complaint === 'trauma' && !v.isTrauma) {
+    v.isTrauma = true
+    v.trauma = v.trauma ?? newTrauma()
+  }
+
+  // Ikut perbarui data master pasien supaya kunjungan berikutnya memakai data yang benar.
+  const master = !v.anonymous && v.patientId ? patients.find((p) => p.id === v.patientId) : null
+  if (master) {
+    await ctx.store.savePatient({
+      ...master,
+      name,
+      sex: input.sex,
+      age: master.birthDate ? master.age : input.age,
+      insurance: input.insurance,
+      updatedAt: Date.now(),
+    })
+  }
+
+  addEvent(v, `Data pendaftaran diubah: ${changed.join(', ')}`, me(ctx))
+  return commit(ctx, v, changed.some((c) => c === 'nama' || c === 'jenis kelamin' || c === 'umur') ? [patientResource(v)] : [])
 }
 
 /* ---------- Trauma ---------- */

@@ -86,7 +86,7 @@ export function Register() {
     <>
       <div className="vh">
         <div>
-          <h1>Pendaftaran Cepat</h1>
+          <h1>Pendaftaran Pasien</h1>
           <p className="sub">Isi yang wajib saja. Data lengkap bisa dilengkapi setelah pasien ditangani.</p>
         </div>
       </div>

@@ -16,7 +16,7 @@ import { FirestoreStore } from '@/lib/data/firestoreStore'
 import { LocalStore } from '@/lib/data/localStore'
 import { emptyData, type DataStore } from '@/lib/data/store'
 import { firebaseEnabled, getFirebase } from '@/lib/firebase'
-import type { AppData, Role, UserProfile } from '@/lib/types'
+import type { AppData, Role, UserProfile, Visit } from '@/lib/types'
 import type { Ctx } from '@/lib/actions'
 
 /* ================= Data ================= */
@@ -257,3 +257,27 @@ export function useCtx(): Ctx | null {
 }
 
 export const isFirebaseMode = firebaseEnabled
+
+/**
+ * Ambil satu kunjungan: dari data realtime jika ada, atau diambil sekali dari database
+ * (untuk kunjungan lama yang sudah tidak ada di daftar realtime 24 jam).
+ */
+export function useVisit(id: string) {
+  const data = useData()
+  const store = useStore()
+  const live = data.visits.find((v) => v.id === id) ?? null
+  const [fetched, setFetched] = useState<{ id: string; v: Visit | null } | null>(null)
+  useEffect(() => {
+    if (live || !data.ready) return
+    let cancel = false
+    store.getVisit(id).then((v) => {
+      if (!cancel) setFetched({ id, v })
+    })
+    return () => {
+      cancel = true
+    }
+  }, [live, id, data.ready, store])
+  const v = live ?? (fetched?.id === id ? fetched.v : null)
+  const loading = !live && (!data.ready || fetched?.id !== id)
+  return { v, loading }
+}

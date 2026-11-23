@@ -300,7 +300,7 @@ export const NAV: { key: ViewKey; label: string; href: string; group: string }[]
   { key: 'dashboard', label: 'Dashboard', href: '/dashboard', group: 'Pelayanan' },
   { key: 'board', label: 'Papan IGD', href: '/', group: 'Pelayanan' },
   { key: 'prearrival', label: 'Pra-Kedatangan', href: '/pra-kedatangan', group: 'Pelayanan' },
-  { key: 'register', label: 'Pendaftaran Cepat', href: '/pendaftaran', group: 'Pelayanan' },
+  { key: 'register', label: 'Pendaftaran Pasien', href: '/pendaftaran', group: 'Pelayanan' },
   { key: 'mci', label: 'Korban Massal', href: '/korban-massal', group: 'Pelayanan' },
   { key: 'patients', label: 'Data Pasien', href: '/data-pasien', group: 'Rekam medis' },
   { key: 'history', label: 'Riwayat Kunjungan', href: '/riwayat', group: 'Rekam medis' },

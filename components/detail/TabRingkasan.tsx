@@ -2,10 +2,10 @@
 
 import { useRouter } from 'next/navigation'
 import { useState, type FormEvent } from 'react'
-import { BEDS, complaintLabel, MODES, type TabKey } from '@/lib/constants'
+import { BEDS, COMPLAINTS, complaintLabel, INSURANCES, MODES, type TabKey } from '@/lib/constants'
 import { ageSex, areaOf, displayName, displayRm, freeBeds, hm, toNum } from '@/lib/clinical'
-import { deleteRegistration, findOldPatient, markTrauma, mergeIdentity, moveBed } from '@/lib/actions'
-import type { Visit } from '@/lib/types'
+import { deleteRegistration, findOldPatient, markTrauma, mergeIdentity, moveBed, updateRegistration } from '@/lib/actions'
+import type { ArrivalMode, ComplaintKey, InsuranceType, Sex, Visit } from '@/lib/types'
 import { useAuth, useCtx, useData } from '../providers'
 import { Chip, ConfirmButton, useRunner } from '../ui'
 
@@ -16,6 +16,7 @@ export function TabRingkasan({ v, goTab }: { v: Visit; goTab: (t: TabKey) => voi
   const { busy, run } = useRunner()
   const [bed, setBed] = useState(v.bed ?? '')
   const [nik, setNik] = useState('')
+  const [editing, setEditing] = useState(false)
   const free = freeBeds(data.visits)
   const router = useRouter()
   const old = findOldPatient(data.patients, nik)
@@ -32,8 +33,16 @@ export function TabRingkasan({ v, goTab }: { v: Visit; goTab: (t: TabKey) => voi
   return (
     <div className="grid2">
       <div className="stack">
-        <section className="panel">
-          <h3>Identitas</h3>
+        {editing && <EditRegistration v={v} onDone={() => setEditing(false)} />}
+        <section className="panel" hidden={editing}>
+          <div className="ph">
+            <h3 style={{ margin: 0 }}>Identitas</h3>
+            {!closed && (
+              <button className="btn sm" onClick={() => setEditing(true)}>
+                Ubah data
+              </button>
+            )}
+          </div>
           <dl className="kv">
             <dt>Nama</dt>
             <dd>
@@ -93,7 +102,7 @@ export function TabRingkasan({ v, goTab }: { v: Visit; goTab: (t: TabKey) => voi
           )}
         </section>
 
-        <section className="panel">
+        <section className="panel" hidden={editing}>
           <h3>Kunjungan</h3>
           <dl className="kv">
             <dt>No. registrasi</dt>
@@ -186,5 +195,101 @@ export function TabRingkasan({ v, goTab }: { v: Visit; goTab: (t: TabKey) => voi
         </ol>
       </section>
     </div>
+  )
+}
+
+/** Form ubah data pendaftaran: identitas dasar, cara datang, penjamin, dan keluhan. */
+function EditRegistration({ v, onDone }: { v: Visit; onDone: () => void }) {
+  const ctx = useCtx()!
+  const data = useData()
+  const { busy, run } = useRunner()
+  const [f, setF] = useState({
+    name: v.patient.name,
+    sex: v.patient.sex,
+    age: v.patient.age === null ? '' : String(v.patient.age),
+    arrivalMode: v.arrivalMode,
+    insurance: v.insurance,
+    complaint: v.complaint,
+    complaintNote: v.complaintNote,
+  })
+  const set = (patch: Partial<typeof f>) => setF((cur) => ({ ...cur, ...patch }))
+
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const r = await run(
+      () => updateRegistration(ctx, v, { ...f, age: toNum(f.age) }, data.patients),
+      (nv) => (nv === v ? 'Tidak ada perubahan.' : 'Data pendaftaran disimpan.'),
+    )
+    if (r) onDone()
+  }
+
+  return (
+    <section className="panel">
+      <h3>Ubah data pendaftaran</h3>
+      <form onSubmit={onSubmit}>
+        <div className="fields">
+          {!v.anonymous && (
+            <div className="f wide">
+              <label htmlFor="ed-name">Nama lengkap</label>
+              <input type="text" id="ed-name" required value={f.name} onChange={(e) => set({ name: e.target.value })} />
+            </div>
+          )}
+          <div className="f">
+            <label htmlFor="ed-sex">Jenis kelamin</label>
+            <select id="ed-sex" value={f.sex} onChange={(e) => set({ sex: e.target.value as Sex })}>
+              <option value="L">Laki-laki</option>
+              <option value="P">Perempuan</option>
+            </select>
+          </div>
+          <div className="f">
+            <label htmlFor="ed-age">Umur (tahun)</label>
+            <input type="number" id="ed-age" min={0} max={130} value={f.age} onChange={(e) => set({ age: e.target.value })} />
+          </div>
+          <div className="f">
+            <label htmlFor="ed-mode">Cara datang</label>
+            <select id="ed-mode" value={f.arrivalMode} onChange={(e) => set({ arrivalMode: e.target.value as ArrivalMode })}>
+              {(Object.keys(MODES) as ArrivalMode[]).map((k) => (
+                <option key={k} value={k}>
+                  {MODES[k]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="f">
+            <label htmlFor="ed-ins">Penjamin</label>
+            <select id="ed-ins" value={f.insurance} onChange={(e) => set({ insurance: e.target.value as InsuranceType })}>
+              {INSURANCES.map((i) => (
+                <option key={i} value={i}>
+                  {i}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="f wide">
+            <label htmlFor="ed-cc">Keluhan utama</label>
+            <select id="ed-cc" value={f.complaint} onChange={(e) => set({ complaint: e.target.value as ComplaintKey })}>
+              {COMPLAINTS.map((c) => (
+                <option key={c.key} value={c.key}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="f wide">
+            <label htmlFor="ed-note">Catatan keluhan</label>
+            <input type="text" id="ed-note" value={f.complaintNote} onChange={(e) => set({ complaintNote: e.target.value })} />
+          </div>
+        </div>
+        {v.anonymous && <p className="note">Nama pasien tanpa identitas diisi lewat form &quot;Gabungkan identitas&quot;.</p>}
+        <div className="formfoot">
+          <button className="btn primary" disabled={busy}>
+            Simpan perubahan
+          </button>
+          <button type="button" className="btn" disabled={busy} onClick={onDone}>
+            Batal
+          </button>
+        </div>
+      </form>
+    </section>
   )
 }
