@@ -8,13 +8,15 @@ import { startCare } from '@/lib/actions'
 import type { Visit } from '@/lib/types'
 import { useAuth, useCtx, useVisit } from '../providers'
 import { Chip, Empty, Timer, TriageChip, useRunner } from '../ui'
+import { TabAsesmen } from './TabAsesmen'
 import { TabDisposisi } from './TabDisposisi'
+import { TabPenunjang } from './TabPenunjang'
 import { TabTriase } from './TabTriase'
 import { TabRingkasan } from './TabRingkasan'
 
 export function tabsFor(role: keyof typeof TAB_ACCESS, v: Visit): TabKey[] {
   // Tab yang sudah aktif. Tambahkan tab lain di sini setiap kali fiturnya selesai.
-  const aktif: TabKey[] = ['ringkasan', 'triase', 'disposisi']
+  const aktif: TabKey[] = ['ringkasan', 'triase', 'asesmen', 'penunjang', 'disposisi']
   return TAB_ACCESS[role].filter((t) => aktif.includes(t))
 }
 
@@ -52,6 +54,8 @@ export function PatientDetail({ id, initialTab }: { id: string; initialTab?: str
   const panes: Partial<Record<TabKey, JSX.Element>> = {
     ringkasan: <TabRingkasan v={v} goTab={setTab} />,
     triase: <TabTriase v={v} />,
+    asesmen: <TabAsesmen v={v} />,
+    penunjang: <TabPenunjang v={v} />,
     disposisi: <TabDisposisi v={v} />,
   }
 
@@ -103,7 +107,7 @@ export function PatientDetail({ id, initialTab }: { id: string; initialTab?: str
             disabled={busy}
             onClick={async () => {
               const r = await run(() => startCare(ctx, v), (nv) => `Penanganan dimulai. Waktu tanggap ${dur((nv.doctorSeenAt ?? 0) - nv.arrivalTime)}.`)
-              if (r) setTab('disposisi')
+              if (r) setTab('asesmen')
             }}
           >
             Mulai penanganan
