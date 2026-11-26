@@ -37,7 +37,7 @@ import { LoginScreen } from './LoginScreen'
  * Menu yang sudah aktif. Tambahkan key menu di sini setiap kali fiturnya selesai,
  * misalnya 'patients' untuk Data Pasien atau 'history' untuk Riwayat Kunjungan.
  */
-const MENU_AKTIF: ViewKey[] = ['dashboard', 'board', 'register']
+const MENU_AKTIF: ViewKey[] = ['dashboard', 'board', 'register', 'fhir']
 
 const ICONS: Record<ViewKey, ReactNode> = {
   dashboard: <LayoutDashboard size={19} />,
