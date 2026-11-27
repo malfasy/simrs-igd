@@ -12,13 +12,16 @@ import { TabAsesmen } from './TabAsesmen'
 import { TabDisposisi } from './TabDisposisi'
 import { TabPenunjang } from './TabPenunjang'
 import { TabTagihan } from './TabTagihan'
+import { TabObservasi } from './TabObservasi'
+import { TabTrauma } from './TabTrauma'
 import { TabTriase } from './TabTriase'
 import { TabRingkasan } from './TabRingkasan'
 
 export function tabsFor(role: keyof typeof TAB_ACCESS, v: Visit): TabKey[] {
   // Tab yang sudah aktif. Tambahkan tab lain di sini setiap kali fiturnya selesai.
-  const aktif: TabKey[] = ['ringkasan', 'triase', 'asesmen', 'penunjang', 'disposisi', 'tagihan']
-  return TAB_ACCESS[role].filter((t) => aktif.includes(t))
+  const aktif: TabKey[] = ['ringkasan', 'triase', 'asesmen', 'penunjang', 'observasi', 'trauma', 'disposisi', 'tagihan']
+  // Tab Trauma hanya muncul untuk pasien yang ditandai trauma (bisa ditandai dari tab Ringkasan).
+  return TAB_ACCESS[role].filter((t) => aktif.includes(t) && (t !== 'trauma' || v.isTrauma))
 }
 
 export function PatientDetail({ id, initialTab }: { id: string; initialTab?: string }) {
@@ -57,6 +60,8 @@ export function PatientDetail({ id, initialTab }: { id: string; initialTab?: str
     triase: <TabTriase v={v} />,
     asesmen: <TabAsesmen v={v} />,
     penunjang: <TabPenunjang v={v} />,
+    observasi: <TabObservasi v={v} />,
+    trauma: <TabTrauma v={v} />,
     disposisi: <TabDisposisi v={v} />,
     tagihan: <TabTagihan v={v} />,
   }
