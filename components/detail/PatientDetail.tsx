@@ -11,12 +11,13 @@ import { Chip, Empty, Timer, TriageChip, useRunner } from '../ui'
 import { TabAsesmen } from './TabAsesmen'
 import { TabDisposisi } from './TabDisposisi'
 import { TabPenunjang } from './TabPenunjang'
+import { TabTagihan } from './TabTagihan'
 import { TabTriase } from './TabTriase'
 import { TabRingkasan } from './TabRingkasan'
 
 export function tabsFor(role: keyof typeof TAB_ACCESS, v: Visit): TabKey[] {
   // Tab yang sudah aktif. Tambahkan tab lain di sini setiap kali fiturnya selesai.
-  const aktif: TabKey[] = ['ringkasan', 'triase', 'asesmen', 'penunjang', 'disposisi']
+  const aktif: TabKey[] = ['ringkasan', 'triase', 'asesmen', 'penunjang', 'disposisi', 'tagihan']
   return TAB_ACCESS[role].filter((t) => aktif.includes(t))
 }
 
@@ -57,6 +58,7 @@ export function PatientDetail({ id, initialTab }: { id: string; initialTab?: str
     asesmen: <TabAsesmen v={v} />,
     penunjang: <TabPenunjang v={v} />,
     disposisi: <TabDisposisi v={v} />,
+    tagihan: <TabTagihan v={v} />,
   }
 
   return (
